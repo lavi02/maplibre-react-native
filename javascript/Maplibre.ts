@@ -57,9 +57,7 @@ export type {
 import {UserTrackingMode} from './components/Camera';
 
 // types:
-export enum StyleURL {
-  Default = 'https://demotiles.maplibre.org/style.json',
-}
+export const DefaultStyle = 'https://demotiles.maplibre.org/style.json';
 
 /** @deprecated UserTrackingModes is deprecated use UserTrackingMode */
 export const UserTrackingModes = UserTrackingMode;
