@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   matchParent: {flex: 1},
 });
 
-const defaultStyleURL = MapLibreGL.StyleURL.Street;
+const defaultStyleURL = MapLibreGL.StyleURL.Default;
 
 export interface RegionPayload {
   zoomLevel: number;
