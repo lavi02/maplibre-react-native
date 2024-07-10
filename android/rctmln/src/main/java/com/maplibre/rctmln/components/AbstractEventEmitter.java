@@ -5,7 +5,7 @@ import android.view.ViewGroup;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.maplibre.rctmln.events.IEvent;
@@ -45,7 +45,7 @@ abstract public class AbstractEventEmitter<T extends ViewGroup> extends ViewGrou
 
     @Override
     protected void addEventEmitters(ThemedReactContext context, @Nonnull T view) {
-        mEventDispatcher = context.getNativeModule(UIManagerModule.class).getEventDispatcher();
+        mEventDispatcher = UIManagerHelper.getEventDispatcherForReactTag(context, view.id);
     }
 
     @Nullable

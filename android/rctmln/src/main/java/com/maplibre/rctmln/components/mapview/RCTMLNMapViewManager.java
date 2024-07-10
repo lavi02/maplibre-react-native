@@ -11,6 +11,10 @@ import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
+import com.facebook.react.uimanager.ViewManagerDelegate;
+import com.facebook.react.viewmanagers.MBXMapViewManagerDelegate;
+import com.facebook.react.viewmanagers.MBXMapViewManagerInterface;
+import com.mapbox.maps.MapInitOptions;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.log.Logger;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
@@ -37,15 +41,17 @@ import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
  * Created by nickitaliano on 8/18/17.
  */
 
-public class RCTMLNMapViewManager extends AbstractEventEmitter<RCTMLNMapView> {
+public class RCTMLNMapViewManager extends AbstractEventEmitter<RCTMLNMapView> implements MBXMapViewManagerInterface<RCTMLNMapView> {
     public static final String LOG_TAG = "RCTMLNMapViewManager";
     public static final String REACT_CLASS = "RCTMLNMapView";
 
     private Map<Integer, RCTMLNMapView> mViews;
+    private final ViewManagerDelegate<RCTMLNMapView> mDelegate;
 
     public RCTMLNMapViewManager(ReactApplicationContext context) {
         super(context);
         mViews = new HashMap<>();
+        mDelegate = new MBXMapViewManagerDelegate<RCTMLNMapView, RCTMLNMapViewManager>(this);
     }
 
     @Override
@@ -93,9 +99,15 @@ public class RCTMLNMapViewManager extends AbstractEventEmitter<RCTMLNMapView> {
         mapView.removeFeature(index);
     }
 
+    public Context getMapViewContext(ThemedReactContext themedReactContext) {
+        Context activity = getCurrentActivity();
+        return activity != null ? activity : themedReactContext;
+    }
+
     @Override
     protected RCTMLNMapView createViewInstance(ThemedReactContext themedReactContext) {
-        return new RCTMLNMapView(themedReactContext, this, null);
+        Context context = getMapViewContext(themedReactContext);
+        return new RCTMLNMapView(context, this, null);
     }
 
     @Override
@@ -106,6 +118,7 @@ public class RCTMLNMapViewManager extends AbstractEventEmitter<RCTMLNMapView> {
             mViews.remove(reactTag);
         }
 
+        mapView.onDropViewInstance();
         super.onDropViewInstance(mapView);
     }
 
@@ -242,70 +255,6 @@ public class RCTMLNMapViewManager extends AbstractEventEmitter<RCTMLNMapView> {
                 .put("showAttribution", METHOD_SHOW_ATTRIBUTION)
                 .put("setSourceVisibility", METHOD_SET_SOURCE_VISIBILITY)
                 .build();
-    }
-
-    @Override
-    public void receiveCommand(RCTMLNMapView mapView, int commandID, @Nullable ReadableArray args) {
-        // allows method calls to work with componentDidMount
-        MapboxMap mapboxMap = mapView.getMapboxMap();
-        if (mapboxMap == null) {
-            mapView.enqueuePreRenderMapMethod(commandID, args);
-            return;
-        }
-
-        switch (commandID) {
-            case METHOD_QUERY_FEATURES_POINT:
-                mapView.queryRenderedFeaturesAtPoint(
-                        args.getString(0),
-                        ConvertUtils.toPointF(args.getArray(1)),
-                        ExpressionParser.from(args.getArray(2)),
-                        ConvertUtils.toStringList(args.getArray(3)));
-                break;
-            case METHOD_QUERY_FEATURES_RECT:
-                mapView.queryRenderedFeaturesInRect(
-                        args.getString(0),
-                        ConvertUtils.toRectF(args.getArray(1)),
-                        ExpressionParser.from(args.getArray(2)),
-                        ConvertUtils.toStringList(args.getArray(3)));
-                break;
-            case METHOD_VISIBLE_BOUNDS:
-                mapView.getVisibleBounds(args.getString(0));
-                break;
-            case METHOD_GET_POINT_IN_VIEW:
-                mapView.getPointInView(args.getString(0), GeoJSONUtils.toLatLng(args.getArray(1)));
-                break;
-            case METHOD_GET_COORDINATE_FROM_VIEW:
-                mapView.getCoordinateFromView(args.getString(0), ConvertUtils.toPointF(args.getArray(1)));
-                break;
-            case METHOD_TAKE_SNAP:
-                mapView.takeSnap(args.getString(0), args.getBoolean(1));
-                break;
-            case METHOD_GET_ZOOM:
-                mapView.getZoom(args.getString(0));
-                break;
-            case METHOD_GET_CENTER:
-                mapView.getCenter(args.getString(0));
-                break;
-            case METHOD_SET_HANDLED_MAP_EVENTS:
-                if(args != null) {
-                    ArrayList<String> eventsArray = new ArrayList<>();
-                    for (int i = 1; i < args.size(); i++) {
-                        eventsArray.add(args.getString(i));
-                    }
-                    mapView.setHandledMapChangedEvents(eventsArray);
-                }
-                break;
-            case METHOD_SHOW_ATTRIBUTION:
-                mapView.showAttribution();
-                break;
-            case METHOD_SET_SOURCE_VISIBILITY:
-                mapView.setSourceVisibility(
-                        args.getBoolean(1),
-                        args.getString(2),
-                        args.getString(3)
-                );
-
-        }
     }
 
     //endregion

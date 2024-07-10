@@ -1,14 +1,21 @@
 package com.maplibre.rctmln;
 
+import androidx.annotation.Nullable;
+
 import com.facebook.react.ReactPackage;
+import com.facebook.react.TurboReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.module.model.ReactModuleInfo;
+import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.maplibre.rctmln.components.annotation.RCTMLNCalloutManager;
 import com.maplibre.rctmln.components.annotation.RCTMLNPointAnnotationManager;
@@ -16,6 +23,7 @@ import com.maplibre.rctmln.components.annotation.RCTMLNMarkerViewManager;
 import com.maplibre.rctmln.components.camera.RCTMLNCameraManager;
 import com.maplibre.rctmln.components.images.RCTMLNImagesManager;
 import com.maplibre.rctmln.components.location.RCTMLNNativeUserLocationManager;
+import com.maplibre.rctmln.components.mapview.NativeMapViewModule;
 import com.maplibre.rctmln.components.mapview.RCTMLNMapViewManager;
 import com.maplibre.rctmln.components.mapview.RCTMLNAndroidTextureMapViewManager;
 import com.maplibre.rctmln.components.styles.layers.RCTMLNBackgroundLayerManager;
@@ -41,19 +49,27 @@ import com.maplibre.rctmln.modules.RCTMLNSnapshotModule;
  * Created by nickitaliano on 8/18/17.
  */
 
-public class RCTMLNPackage implements ReactPackage {
+public class RCTMLNPackage implements TurboReactPackage {
 
+    @Nullable
     @Override
-    public List<NativeModule> createNativeModules(ReactApplicationContext reactApplicationContext) {
-        List<NativeModule> modules = new ArrayList<>();
+    public NativeModule getModule(String s, ReactApplicationContext reactApplicationContext) {
+        switch (s) {
+            case RCTMLNModule.REACT_CLASS:
+                return new RCTMLNModule(reactApplicationContext);
+            case RCTMLNLocationModule.REACT_CLASS:
+                return new RCTMLNLocationModule(reactApplicationContext);
+            case RCTMLNOfflineModule.REACT_CLASS:
+                return new RCTMLNOfflineModule(reactApplicationContext);
+            case RCTMLNSnapshotModule.REACT_CLASS:
+                return new RCTMLNSnapshotModule(reactApplicationContext);
+            case RCTMLNLogging.REACT_CLASS:
+                return new RCTMLNLogging(reactApplicationContext);
+            case NativeMapViewModule.NAME:
+                return new NativeMapViewModule(reactApplicationContext);
+        }
 
-        modules.add(new RCTMLNModule(reactApplicationContext));
-        modules.add(new RCTMLNOfflineModule(reactApplicationContext));
-        modules.add(new RCTMLNSnapshotModule(reactApplicationContext));
-        modules.add(new RCTMLNLocationModule(reactApplicationContext));
-        modules.add(new RCTMLNLogging(reactApplicationContext));
-
-        return modules;
+        return null;
     }
 
     @Deprecated
@@ -95,5 +111,87 @@ public class RCTMLNPackage implements ReactPackage {
         managers.add(new RCTMLNBackgroundLayerManager());
 
         return managers;
+    }
+
+    @Override
+    public ReactModuleInfoProvider getReactModuleInfoProvider() {
+        return () -> {
+            final Map<String, ReactModuleInfo> moduleInfos = new HashMap<>();
+            boolean isTurboModule = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
+
+            moduleInfos.put(
+                    RCTMLNModule.REACT_CLASS,
+                    new ReactModuleInfo(
+                            RCTMLNModule.REACT_CLASS,
+                            RCTMLNModule.REACT_CLASS,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            true, // hasConstants
+                            false, // isCxxModule
+                            false // isTurboModule
+                    ));
+
+            moduleInfos.put(
+                    RCTMLNLocationModule.REACT_CLASS,
+                    new ReactModuleInfo(
+                            RCTMLNLocationModule.REACT_CLASS,
+                            RCTMLNLocationModule.REACT_CLASS,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            true, // hasConstants
+                            false, // isCxxModule
+                            false // isTurboModule
+                    ));
+
+            moduleInfos.put(
+                    RCTMLNOfflineModule.REACT_CLASS,
+                    new ReactModuleInfo(
+                            RCTMLNOfflineModule.REACT_CLASS,
+                            RCTMLNOfflineModule.REACT_CLASS,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            true, // hasConstants
+                            false, // isCxxModule
+                            false // isTurboModule
+                    ));
+
+            moduleInfos.put(
+                    RCTMLNSnapshotModule.REACT_CLASS,
+                    new ReactModuleInfo(
+                            RCTMLNSnapshotModule.REACT_CLASS,
+                            RCTMLNSnapshotModule.REACT_CLASS,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            true, // hasConstants
+                            false, // isCxxModule
+                            false // isTurboModule
+                    ));
+
+            moduleInfos.put(
+                    RCTMLNLogging.REACT_CLASS,
+                    new ReactModuleInfo(
+                            RCTMLNLogging.REACT_CLASS,
+                            RCTMLNLogging.REACT_CLASS,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            true, // hasConstants
+                            false, // isCxxModule
+                            false // isTurboModule
+                    ));
+
+            moduleInfos.put(
+                    NativeMapViewModule.NAME,
+                    new ReactModuleInfo(
+                            NativeMapViewModule.NAME,
+                            NativeMapViewModule.NAME,
+                            false, // canOverrideExistingModule
+                            false, // needsEagerInit
+                            false, // hasConstants
+                            false, // isCxxModule
+                            isTurboModule // isTurboModule
+                    ));
+
+            return moduleInfos;
+        };
     }
 }
