@@ -1,6 +1,6 @@
 import {FilterExpression} from '../utils/MaplibreStyles';
 import {Location} from '../modules/location/locationManager';
-import { StyleURL } from '../Maplibre';
+import { DefaultStyle } from '../Maplibre';
 import {isFunction, isAndroid} from '../utils';
 import {getFilter} from '../utils/filterUtils';
 import Logger from '../utils/Logger';
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   matchParent: {flex: 1},
 });
 
-const defaultStyleURL = StyleURL.Default;
+const defaultStyleURL = DefaultStyle === undefined ? 'https://demotiles.maplibre.org/style.json' : DefaultStyle;
 
 export interface RegionPayload {
   zoomLevel: number;
