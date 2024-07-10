@@ -1,5 +1,6 @@
 import {FilterExpression} from '../utils/MaplibreStyles';
 import {Location} from '../modules/location/locationManager';
+import { StyleURL } from '../Maplibre';
 import {isFunction, isAndroid} from '../utils';
 import {getFilter} from '../utils/filterUtils';
 import Logger from '../utils/Logger';
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
   matchParent: {flex: 1},
 });
 
-const defaultStyleURL = MapLibreGL.StyleURL.Default;
+const defaultStyleURL = StyleURL.Default;
 
 export interface RegionPayload {
   zoomLevel: number;
