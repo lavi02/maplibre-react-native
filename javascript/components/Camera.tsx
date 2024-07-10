@@ -444,6 +444,10 @@ class Camera extends React.Component<CameraProps> {
       paddingBottom: 0,
     };
 
+    if (animationDuration === null || animationDuration === undefined) {
+      animationDuration = undefined;
+    }
+
     if (Array.isArray(padding)) {
       if (padding.length === 2) {
         pad.paddingTop = padding[0];
@@ -457,10 +461,10 @@ class Camera extends React.Component<CameraProps> {
         pad.paddingLeft = padding[3];
       }
     } else {
-      pad.paddingLeft = padding;
-      pad.paddingRight = padding;
-      pad.paddingTop = padding;
-      pad.paddingBottom = padding;
+      pad.paddingLeft = padding || 0;
+      pad.paddingRight = padding || 0;
+      pad.paddingTop = padding || 0;
+      pad.paddingBottom = padding || 0;
     }
 
     this.setCamera({

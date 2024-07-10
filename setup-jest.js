@@ -1,4 +1,4 @@
-import {NativeModules} from 'react-native';
+import {NativeModules, TurboModuleRegistry} from 'react-native';
 
 function keyMirror(keys) {
   const obj = {};
@@ -106,3 +106,141 @@ NativeModules.MLNLocationModule = {
   stop: jest.fn(),
   pause: jest.fn(),
 };
+
+TurboModuleRegistry.getEnforcing = jest.fn(name => {
+  if (name === 'MLNModule') {
+    return NativeModules.MLNModule;
+  }
+  if (name === 'MLNOfflineModule') {
+    return NativeModules.MLNOfflineModule;
+  }
+  if (name === 'MLNSnapshotModule') {
+    return NativeModules.MLNSnapshotModule;
+  }
+  if (name === 'MLNLocationModule') {
+    return NativeModules.MLNLocationModule;
+  }
+  throw new Error(`Unknown TurboModule: ${name}`);
+});
+
+jest.mock('react-native/Libraries/TurboModule/TurboModuleRegistry', () => {
+  function keyMirror(keys) {
+    const obj = {};
+    keys.forEach(key => (obj[key] = key));
+    return obj;
+  }
+
+  return {
+    getEnforcing: jest.fn(name => {
+      if (name === 'MLNModule') {
+        return {
+          // constants
+          UserTrackingModes: keyMirror([
+            'None',
+            'Follow',
+            'FollowWithCourse',
+            'FollowWithHeading',
+          ]),
+          StyleURL: keyMirror(['Default']),
+          EventTypes: keyMirror([
+            'MapClick',
+            'MapLongClick',
+            'RegionWillChange',
+            'RegionIsChanging',
+            'RegionDidChange',
+            'WillStartLoadingMap',
+            'DidFinishLoadingMap',
+            'DidFailLoadingMap',
+            'WillStartRenderingFrame',
+            'DidFinishRenderingFrame',
+            'DidFinishRenderingFrameFully',
+            'DidFinishLoadingStyle',
+            'SetCameraComplete',
+          ]),
+          CameraModes: keyMirror(['Flight', 'Ease', 'None']),
+          StyleSource: keyMirror(['DefaultSourceID']),
+          InterpolationMode: keyMirror([
+            'Exponential',
+            'Categorical',
+            'Interval',
+            'Identity',
+          ]),
+          LineJoin: keyMirror(['Bevel', 'Round', 'Miter']),
+          LineCap: keyMirror(['Butt', 'Round', 'Square']),
+          LineTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          CirclePitchScale: keyMirror(['Map', 'Viewport']),
+          CircleTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          FillExtrusionTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          FillTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          IconRotationAlignment: keyMirror(['Auto', 'Map', 'Viewport']),
+          IconTextFit: keyMirror(['None', 'Width', 'Height', 'Both']),
+          IconTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          SymbolPlacement: keyMirror(['Line', 'Point']),
+          TextAnchor: keyMirror([
+            'Center',
+            'Left',
+            'Right',
+            'Top',
+            'Bottom',
+            'TopLeft',
+            'TopRight',
+            'BottomLeft',
+            'BottomRight',
+          ]),
+          TextJustify: keyMirror(['Center', 'Left', 'Right']),
+          TextPitchAlignment: keyMirror(['Auto', 'Map', 'Viewport']),
+          TextRotationAlignment: keyMirror(['Auto', 'Map', 'Viewport']),
+          TextTransform: keyMirror(['None', 'Lowercase', 'Uppercase']),
+          TextTranslateAnchor: keyMirror(['Map', 'Viewport']),
+          LightAnchor: keyMirror(['Map', 'Viewport']),
+          OfflinePackDownloadState: keyMirror([
+            'Inactive',
+            'Active',
+            'Complete',
+          ]),
+          OfflineCallbackName: keyMirror(['Progress', 'Error']),
+
+          // methods
+          setAccessToken: jest.fn(),
+          getAccessToken: () => Promise.resolve('test-token'),
+          setConnected: jest.fn(),
+        };
+      }
+      if (name === 'MLNOfflineModule') {
+        return {
+          createPack: packOptions => {
+            return Promise.resolve({
+              bounds: packOptions.bounds,
+              metadata: JSON.stringify({name: packOptions.name}),
+            });
+          },
+          getPacks: () => Promise.resolve([]),
+          deletePack: () => Promise.resolve(),
+          getPackStatus: () => Promise.resolve({}),
+          pausePackDownload: () => Promise.resolve(),
+          resumePackDownload: () => Promise.resolve(),
+          setPackObserver: () => Promise.resolve(),
+          setTileCountLimit: jest.fn(),
+          setProgressEventThrottle: jest.fn(),
+        };
+      }
+      if (name === 'MLNSnapshotModule') {
+        return {
+          takeSnap: () => {
+            return Promise.resolve('file://test.png');
+          },
+        };
+      }
+      if (name === 'MLNLocationModule') {
+        return {
+          getLastKnownLocation: jest.fn(),
+          setMinDisplacement: jest.fn(),
+          start: jest.fn(),
+          stop: jest.fn(),
+          pause: jest.fn(),
+        };
+      }
+      throw new Error(`Unknown TurboModule: ${name}`);
+    }),
+  };
+});

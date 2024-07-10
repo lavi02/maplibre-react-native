@@ -1,22 +1,16 @@
+import NativeMapViewModule from '../specs/NativeMapViewModule';
+
 import React, {Component, ReactElement} from 'react';
 import {
   Image,
-  NativeModules,
   findNodeHandle,
   Platform,
   ImageSourcePropType,
 } from 'react-native';
 
-function getAndroidManagerInstance(module: string): any {
-  const haveViewManagerConfig =
-    NativeModules.UIManager && NativeModules.UIManager.getViewManagerConfig;
-  return haveViewManagerConfig
-    ? NativeModules.UIManager.getViewManagerConfig(module)
-    : NativeModules.UIManager[module];
-}
-
 function getIosManagerInstance(module: string): any {
-  return NativeModules[getIOSModuleName(module)];
+  // @ts-expect-error TS says that string cannot be used to index NativeMapViewModule.
+  return NativeMapViewModule[getIOSModuleName(module)];
 }
 
 export function isAndroid(): boolean {
@@ -75,23 +69,20 @@ export function runNativeCommand<ReturnType = NativeArg>(
     throw new Error(`Could not find handle for native ref ${module}.${name}`);
   }
 
-  const managerInstance = isAndroid()
-    ? getAndroidManagerInstance(module)
-    : getIosManagerInstance(module);
+  try {
+    if (isAndroid()) {
+      // @ts-expect-error TS says that string cannot be used to index NativeMapViewModule.
+      // It can, it's just not pretty.
+      return NativeMapViewModule[module]?.(
+        handle,
+        ...args,
+      ) as Promise<ReturnType>;
+    }
 
-  if (!managerInstance) {
-    throw new Error(`Could not find ${module}`);
+    return getIosManagerInstance(module)[name](handle, ...args);
+  } catch (e) {
+    throw new Error(`Error running native command: ${e}`);
   }
-
-  if (isAndroid()) {
-    return NativeModules.UIManager.dispatchViewManagerCommand(
-      handle,
-      managerInstance.Commands[name],
-      args,
-    );
-  }
-
-  return managerInstance[name](handle, ...args);
 }
 
 export function cloneReactChildrenWithProps(

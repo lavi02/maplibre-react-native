@@ -1,10 +1,10 @@
 import {FilterExpression} from '../utils/MaplibreStyles';
 import {Location} from '../modules/location/locationManager';
-import { DefaultStyle } from '../Maplibre';
 import {isFunction, isAndroid} from '../utils';
 import {getFilter} from '../utils/filterUtils';
 import Logger from '../utils/Logger';
 import BaseProps from '../types/BaseProps';
+import NativeAndroidTextureMapView from '../specs/MBXAndroidTextureMapViewNativeComponent';
 
 import NativeBridgeComponent from './NativeBridgeComponent';
 
@@ -13,7 +13,6 @@ import {
   View,
   StyleSheet,
   NativeModules,
-  requireNativeComponent,
   ViewProps,
   NativeMethods,
   LayoutChangeEvent,
@@ -30,13 +29,11 @@ if (MapLibreGL == null) {
 
 export const NATIVE_MODULE_NAME = 'RCTMLNMapView';
 
-export const ANDROID_TEXTURE_NATIVE_MODULE_NAME = 'RCTMLNAndroidTextureMapView';
-
 const styles = StyleSheet.create({
   matchParent: {flex: 1},
 });
 
-const defaultStyleURL = DefaultStyle === undefined ? 'https://demotiles.maplibre.org/style.json' : DefaultStyle;
+const defaultStyleURL = MapLibreGL.StyleURL.Street;
 
 export interface RegionPayload {
   zoomLevel: number;
@@ -325,7 +322,7 @@ class MapView extends NativeBridgeComponent(
       props.regionWillChangeDebounceTime,
       {
         immediate: true,
-      }
+      },
     );
 
     this._onDebouncedRegionDidChange = debounce(
@@ -395,7 +392,7 @@ class MapView extends NativeBridgeComponent(
         events.push(MapLibreGL.EventTypes.DidFinishLoadingStyle);
       }
 
-      this._runNativeCommand(
+      super._runNativeCommand(
         'setHandledMapChangedEvents',
         this._nativeRef,
         events,
@@ -616,7 +613,7 @@ class MapView extends NativeBridgeComponent(
 
   _onPress(e: NativeSyntheticEvent<{payload: GeoJSON.Feature}>): void {
     if (isFunction(this.props.onPress)) {
-      this.props.onPress(e.nativeEvent.payload);
+      this.props.onPress(this._decodePayload(e.nativeEvent.payload));
     }
   }
 
@@ -652,7 +649,16 @@ class MapView extends NativeBridgeComponent(
   ): void {
     const {regionWillChangeDebounceTime, regionDidChangeDebounceTime} =
       this.props;
-    const {type, payload} = e.nativeEvent;
+    const {type} = e.nativeEvent;
+    let payload: GeoJSON.Feature | Location | undefined;
+
+    if (e.nativeEvent.payload !== undefined) {
+      payload = this._decodePayload(
+        e.nativeEvent.payload as GeoJSON.Feature | string,
+      );
+    } else {
+      payload = undefined;
+    }
     let propName: CallableProps | undefined;
 
     switch (type) {
@@ -800,9 +806,9 @@ class MapView extends NativeBridgeComponent(
       );
     } else if (this.state.isReady) {
       mapView = (
-        <RCTMLNMapView {...props} {...callbacks}>
+        <RCTMLNAndroidTextureMapView {...props} {...callbacks}>
           {this.props.children}
-        </RCTMLNMapView>
+        </RCTMLNAndroidTextureMapView>
       );
     }
 
@@ -818,12 +824,9 @@ class MapView extends NativeBridgeComponent(
 }
 
 type RCTMLNMapViewRefType = Component<NativeProps> & Readonly<NativeMethods>;
-const RCTMLNMapView = requireNativeComponent<NativeProps>(NATIVE_MODULE_NAME);
 
-let RCTMLNAndroidTextureMapView: typeof RCTMLNMapView;
+let RCTMLNAndroidTextureMapView: any;
 if (isAndroid()) {
-  RCTMLNAndroidTextureMapView = requireNativeComponent<NativeProps>(
-    ANDROID_TEXTURE_NATIVE_MODULE_NAME,
-  );
+  RCTMLNAndroidTextureMapView = NativeAndroidTextureMapView;
 }
 export default MapView;

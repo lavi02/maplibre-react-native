@@ -1,3 +1,5 @@
+import {Geometry, GeoJsonProperties} from 'geojson';
+
 import {runNativeCommand, isAndroid, NativeArg} from '../utils';
 
 import {Component, SyntheticEvent} from 'react';
@@ -109,6 +111,18 @@ const NativeBridgeComponent = <
         nativeRef,
         args,
       );
+    }
+
+    _decodePayload<G extends Geometry | null = Geometry, P = GeoJsonProperties>(
+      payload: GeoJSON.Feature<G, P> | string,
+    ): GeoJSON.Feature<G, P> {
+      // we check whether the payload is a string, since the strict type safety is enforced only on iOS on the new arch
+      // on Android, on both archs, the payload is an object
+      if (typeof payload === 'string') {
+        return JSON.parse(payload);
+      } else {
+        return payload;
+      }
     }
   };
   return NativeBridge;
